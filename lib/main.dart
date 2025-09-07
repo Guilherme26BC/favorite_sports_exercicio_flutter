@@ -153,7 +153,7 @@ class _SportListScreenState extends State<SportListScreen> {
   @override
   Widget build(BuildContext context) {
     // TODO: montar Scaffold com AppBar, seção "Último prato visto" e lista de foods
-    return Container();
+    return Scaffold(appBar: AppBar(title: Text("Sportes favoritos"),),);
   }
 }
 
