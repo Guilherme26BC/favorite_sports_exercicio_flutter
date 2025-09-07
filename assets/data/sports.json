@@ -1,0 +1,22 @@
+[{
+    "id": 1,
+    "name": "Volei",
+    "image": "assets/image/",
+    "popularity": "media",
+    "description": "descrição volei"
+},
+{
+    "id": 2,
+    "name": "futebol",
+    "image": "assets/image/",
+    "popularity": "alta",
+    "description": "descrição futebol"
+},
+{
+    "id": 3,
+    "name": "Basquete",
+    "image": "assets/image/",
+    "popularity": "alta",
+    "description": "descrição basquete"
+}
+]
