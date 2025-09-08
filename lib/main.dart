@@ -110,12 +110,13 @@ class _SportListScreenState extends State<SportListScreen> {
     _loadLastViewed();
   }
 
-  Future<void> _loadSports() async {
+  Future<List<Sport>> _loadSports() async {
     // TODO: carregar JSON de assets/data/foods.json e preencher lista foods
     final jsonstr = await rootBundle.loadString('assets/data/sports.json');
     final list = jsonDecode(jsonstr) as List;
     sports =
         list.map((e) => Sport.fromJson(Map<String, dynamic>.from(e))).toList();
+    return sports;
   }
 
   Future<void> _loadLastViewed() async {
@@ -153,7 +154,40 @@ class _SportListScreenState extends State<SportListScreen> {
   @override
   Widget build(BuildContext context) {
     // TODO: montar Scaffold com AppBar, seção "Último prato visto" e lista de foods
-    return Scaffold(appBar: AppBar(title: Text("Sportes favoritos"),),);
+    return Scaffold(
+      appBar: AppBar(title: Text("Sportes favoritos")),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          // LastViewedCard(sport: lastViewed, onTap: () {}),
+          SizedBox(height: 16),
+          FutureBuilder<List<Sport>>(
+            future: _loadSports(), 
+            builder: (context, snapshot){
+            if(snapshot.connectionState == ConnectionState.waiting){ 
+            return const Center(child: CircularProgressIndicator());
+            } else if(snapshot.hasError) {
+              return const Center(child: Text('Erro ao carregar obras'),);
+            }else if(!snapshot.hasData || snapshot.data!.isEmpty){
+              return const Center(child: Text('nenhuma obra encontrada'));
+            }else{
+              final sp = snapshot.data!;
+              return Expanded(
+                child: ListView.builder(
+                  itemCount: sp.length,
+                  itemBuilder: (context, index){
+                    final s = sp[index];
+                    return GestureDetector(
+                      onTap: (){_openDetails(s);},
+                      child: Sportcard(sport: s));
+                
+                  }),
+              );
+            }
+          })
+        ],
+      ),
+    );
   }
 }
 
@@ -161,10 +195,10 @@ class _SportListScreenState extends State<SportListScreen> {
 // WIDGET: CARD ÚLTIMO FOOD
 // ---------------------------
 class LastViewedCard extends StatelessWidget {
-  final Sport? food;
+  final Sport? sport;
   final VoidCallback? onTap;
 
-  const LastViewedCard({super.key, this.food, this.onTap});
+  const LastViewedCard({super.key, this.sport, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -177,15 +211,56 @@ class LastViewedCard extends StatelessWidget {
 // WIDGET: CARD FOOD
 // ---------------------------
 class Sportcard extends StatelessWidget {
-  final Sport food;
+  final Sport sport;
   final VoidCallback? onTap;
 
-  const Sportcard({super.key, required this.food, this.onTap});
+  const Sportcard({super.key, required this.sport, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: retornar Card/ListTile com nome, imagem, descrição do food
-    return Container();
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.all(8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                sport.image,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (_, __, ____) => Container(
+                      color: Colors.grey[300],
+                      height: 200,
+                      child: const Icon(Icons.broken_image, size: 60),
+                    ),
+              ),
+            ),
+            SizedBox(width: 8),
+            Column(
+              children: [
+                Text(
+                  sport.name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6,),
+                Text(sport.description, style: TextStyle(fontSize: 14),),
+                SizedBox(height: 4,),
+                Text(sport.popularity, style: TextStyle(fontSize: 14),)
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
