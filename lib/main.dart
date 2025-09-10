@@ -111,16 +111,13 @@ class _SportListScreenState extends State<SportListScreen> {
   }
 
   Future<List<Sport>> _loadSports() async {
-    // TODO: carregar JSON de assets/data/foods.json e preencher lista foods
     final jsonstr = await rootBundle.loadString('assets/data/sports.json');
     final list = jsonDecode(jsonstr) as List;
-    sports =
-        list.map((e) => Sport.fromJson(Map<String, dynamic>.from(e))).toList();
+    sports = list.map((e) => Sport.fromJson(Map<String, dynamic>.from(e))).toList();
     return sports;
   }
 
   Future<void> _loadLastViewed() async {
-    // TODO: carregar último food visto de SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_keylastViewedSport);
     if (jsonStr != null) {
@@ -129,19 +126,19 @@ class _SportListScreenState extends State<SportListScreen> {
         lastViewed = Sport.fromJson(map);
       } catch (_) {}
     }
+    setState(() {});
   }
 
   static const String _keylastViewedSport = 'ultimo_visto';
+
   Future<void> _saveLastViewed(Sport sport) async {
-    // TODO: salvar food em SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keylastViewedSport, jsonEncode(sport.toJson()));
+    _loadLastViewed();
   }
 
   void _openDetails(Sport sport) async {
-    // TODO: abrir SportDetailScreen via Navigator e salvar como último visto
     _saveLastViewed(sport);
-    _loadLastViewed();
     if (mounted) {
       Navigator.pushNamed(
         context,
@@ -153,38 +150,39 @@ class _SportListScreenState extends State<SportListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: montar Scaffold com AppBar, seção "Último prato visto" e lista de foods
     return Scaffold(
-      appBar: AppBar(title: Text("Sportes favoritos")),
+      appBar: AppBar(title: const Text("Esportes Favoritos")),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // LastViewedCard(sport: lastViewed, onTap: () {}),
-          SizedBox(height: 16),
+          if (lastViewed != null) 
+            LastViewedCard(sport: lastViewed, onTap: () => _openDetails(lastViewed!)),
+          const SizedBox(height: 16),
           FutureBuilder<List<Sport>>(
-            future: _loadSports(), 
-            builder: (context, snapshot){
-            if(snapshot.connectionState == ConnectionState.waiting){ 
-            return const Center(child: CircularProgressIndicator());
-            } else if(snapshot.hasError) {
-              return const Center(child: Text('Erro ao carregar obras'),);
-            }else if(!snapshot.hasData || snapshot.data!.isEmpty){
-              return const Center(child: Text('nenhuma obra encontrada'));
-            }else{
-              final sp = snapshot.data!;
-              return Expanded(
-                child: ListView.builder(
-                  itemCount: sp.length,
-                  itemBuilder: (context, index){
-                    final s = sp[index];
-                    return GestureDetector(
-                      onTap: (){_openDetails(s);},
-                      child: Sportcard(sport: s));
-                
-                  }),
-              );
-            }
-          })
+            future: _loadSports(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return const Center(child: Text('Erro ao carregar esportes'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('Nenhum esporte encontrado'));
+              } else {
+                final sp = snapshot.data!;
+                return Expanded(
+                  child: ListView.builder(
+                    itemCount: sp.length,
+                    itemBuilder: (context, index) {
+                      final s = sp[index];
+                      return GestureDetector(
+                        onTap: () => _openDetails(s),
+                        child: Sportcard(sport: s),
+                      );
+                    },
+                  ),
+                );
+              }
+            },
+          ),
         ],
       ),
     );
@@ -192,18 +190,65 @@ class _SportListScreenState extends State<SportListScreen> {
 }
 
 // ---------------------------
-// WIDGET: CARD ÚLTIMO FOOD
+// WIDGET: CARD ÚLTIMO SPORT
 // ---------------------------
 class LastViewedCard extends StatelessWidget {
   final Sport? sport;
   final VoidCallback? onTap;
 
-  const LastViewedCard({super.key, this.sport, this.onTap});
+  const LastViewedCard({super.key, required this.sport, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: retornar Card com informações do último food ou SizedBox.shrink() se null
-    return Container();
+    return (sport != null)
+        ? Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadiusGeometry.circular(12),
+          ),
+          margin: const EdgeInsets.all(8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    sport!.image,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ____) => Container(
+                          color: Colors.grey[300],
+                          height: 100,
+                          child: const Icon(Icons.broken_image, size: 60),
+                        ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sport!.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(sport!.description, style: TextStyle(fontSize: 14)),
+                    SizedBox(height: 4),
+                    Text(sport!.popularity, style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        )
+        : Container();
   }
 }
 
@@ -236,13 +281,15 @@ class Sportcard extends StatelessWidget {
                 errorBuilder:
                     (_, __, ____) => Container(
                       color: Colors.grey[300],
-                      height: 200,
+                      height: 100,
                       child: const Icon(Icons.broken_image, size: 60),
                     ),
               ),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: 16),
             Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   sport.name,
@@ -251,10 +298,10 @@ class Sportcard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 6,),
-                Text(sport.description, style: TextStyle(fontSize: 14),),
-                SizedBox(height: 4,),
-                Text(sport.popularity, style: TextStyle(fontSize: 14),)
+                SizedBox(height: 6),
+                Text(sport.description, style: TextStyle(fontSize: 14)),
+                SizedBox(height: 4),
+                Text(sport.popularity, style: TextStyle(fontSize: 14)),
               ],
             ),
           ],
@@ -267,18 +314,57 @@ class Sportcard extends StatelessWidget {
 // ---------------------------
 // TELA DE DETALHES
 // ---------------------------
-class SportDetailScreen extends StatefulWidget {
+class SportDetailScreen extends StatelessWidget {
   final Sport sport;
   const SportDetailScreen({super.key, required this.sport});
 
   @override
-  State<SportDetailScreen> createState() => _SportDetailScreenState();
-}
-
-class _SportDetailScreenState extends State<SportDetailScreen> {
-  @override
   Widget build(BuildContext context) {
     // TODO: recuperar produto via ModalRoute e exibir detalhes (imagem, nome, estrelas, descrição e preços)
-    return Container();
+   return Scaffold(
+      appBar: AppBar(
+        title: Text(sport.name),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                sport.image,
+                width: 200,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                  child: const Icon(Icons.broken_image, size: 60),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              sport.name,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Popularidade: ${sport.popularity}',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              sport.description,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

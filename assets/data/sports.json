@@ -1,21 +1,21 @@
 [{
     "id": 1,
     "name": "Volei",
-    "image": "assets/image/",
+    "image": "assets/images/volei.png",
     "popularity": "media",
     "description": "descrição volei"
 },
 {
     "id": 2,
     "name": "futebol",
-    "image": "assets/image/",
+    "image": "assets/images/futebol.jpg",
     "popularity": "alta",
     "description": "descrição futebol"
 },
 {
     "id": 3,
     "name": "Basquete",
-    "image": "assets/image/",
+    "image": "assets/images/basquete.png",
     "popularity": "alta",
     "description": "descrição basquete"
 }
